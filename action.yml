@@ -1,0 +1,60 @@
+name: 'Laravel Action Workflow'
+description: 'Github Actions Workflow for Laravel Projects'
+inputs:
+  php-version:
+    description: 'Which PHP version to use'
+    required: true
+    default: '8.1'
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install PHP
+      uses: shivammathur/setup-php@master
+      with:
+        php-version: ${{ inputs.php-version }}
+        coverage: none
+
+    - name: Setup Github token for private repos
+      run: composer config -g github-oauth.github.com ${{ secrets.GH_ACCESS_TOKEN }}
+
+    - name: Cache composer dependencies
+      uses: actions/cache@v1
+      with:
+        path: vendor
+        key: composer-${{ hashFiles('composer.lock') }}
+
+    - name: Install composer depedencies
+      run: composer install -n --prefer-dist --no-scripts --no-progress
+
+    - name: Setup locales
+      run: sudo locale-gen sv_SE.UTF-8
+
+    - name: Prepare Laravel
+      run: |
+        cp .env.example .env
+        php artisan key:generate
+
+    - name: Cache yarn dependencies
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: yarn-${{ hashFiles('yarn.lock') }}
+
+    - name: Run yarn
+      run: yarn install --pure-lockfile
+
+    - name: Start mysql service
+      run: sudo /etc/init.d/mysql start
+
+    - name: Create database
+      run: mysql -u root -proot -e 'CREATE DATABASE app;'
+
+    - name: Run tests
+      run: composer test
+      env:
+        DB_DATABASE: app
+        DB_USERNAME: root
+        DB_PASSWORD: root
