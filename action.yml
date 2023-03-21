@@ -19,6 +19,7 @@ runs:
 
     - name: Setup Github token for private repos
       run: composer config -g github-oauth.github.com ${{ secrets.GH_ACCESS_TOKEN }}
+      shell: bash
 
     - name: Cache composer dependencies
       uses: actions/cache@v1
@@ -28,14 +29,17 @@ runs:
 
     - name: Install composer depedencies
       run: composer install -n --prefer-dist --no-scripts --no-progress
+      shell: bash
 
     - name: Setup locales
       run: sudo locale-gen sv_SE.UTF-8
+      shell: bash
 
     - name: Prepare Laravel
       run: |
         cp .env.example .env
         php artisan key:generate
+      shell: bash
 
     - name: Cache yarn dependencies
       uses: actions/cache@v1
@@ -45,15 +49,19 @@ runs:
 
     - name: Run yarn
       run: yarn install --pure-lockfile
+      shell: bash
 
     - name: Start mysql service
       run: sudo /etc/init.d/mysql start
+      shell: bash
 
     - name: Create database
       run: mysql -u root -proot -e 'CREATE DATABASE app;'
+      shell: bash
 
     - name: Run tests
       run: composer test
+      shell: bash
       env:
         DB_DATABASE: app
         DB_USERNAME: root
