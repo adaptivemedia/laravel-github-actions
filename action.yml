@@ -5,6 +5,9 @@ inputs:
     description: 'Which PHP version to use'
     required: true
     default: '8.1'
+  github_token:
+    description: 'Github token'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -18,7 +21,7 @@ runs:
         coverage: none
 
     - name: Setup Github token for private repos
-      run: composer config -g github-oauth.github.com ${{ secrets.GH_ACCESS_TOKEN }}
+      run: composer config -g github-oauth.github.com ${{ inputs.github_token }}
       shell: bash
 
     - name: Cache composer dependencies
